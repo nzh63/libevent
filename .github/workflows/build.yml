@@ -11,21 +11,21 @@ on:
       - master
     push:
       paths-ignore:
-        - '**.md'
-        - '.mailmap'
-        - 'ChangeLog*'
-        - 'whatsnew*'
-        - 'LICENSE'
+        - "**.md"
+        - ".mailmap"
+        - "ChangeLog*"
+        - "whatsnew*"
+        - "LICENSE"
   push:
     branches:
       - master
     push:
       paths-ignore:
-        - '**.md'
-        - '.mailmap'
-        - 'ChangeLog*'
-        - 'whatsnew*'
-        - 'LICENSE'
+        - "**.md"
+        - ".mailmap"
+        - "ChangeLog*"
+        - "whatsnew*"
+        - "LICENSE"
 
 jobs:
   linux-cmake-job:
@@ -288,6 +288,7 @@ jobs:
           - DISABLE_DEBUG_MODE
           - DISABLE_MM_REPLACEMENT
           - DUNICODE
+          - UNOCODE_TEMPORARY_DIRECTORY
           - TEST_EXPORT_SHARED
           - TEST_EXPORT_STATIC
 
@@ -331,6 +332,11 @@ jobs:
           }
           elseif ( "${{ matrix.EVENT_MATRIX }}" -eq "UNICODE" ) {
             $EVENT_CMAKE_OPTIONS="-DCMAKE_C_FLAGS='-DUNICODE -D_UNICODE'"
+          }
+          elseif ( "${{ matrix.EVENT_MATRIX }}" -eq "UNICODE" ) {
+            $EVENT_CMAKE_OPTIONS=""
+            mkdir $env:GITHUB_WORKSPACE/中文路径
+            echo $env:GITHUB_WORKSPACE/中文路径 >> >> $env:GITHUB_ENV
           }
           elseif ( "${{ matrix.EVENT_MATRIX }}" -eq "TEST_EXPORT_SHARED" ) {
             $EVENT_CMAKE_OPTIONS="-DEVENT__DISABLE_TESTS=ON -DEVENT__DISABLE_SAMPLES=ON"
@@ -862,7 +868,6 @@ jobs:
           path: build
           key: freebsd-${{ matrix.release }}-autotools-${{ matrix.EVENT_MATRIX }}-v1
 
-
       - name: Build
         uses: vmactions/freebsd-vm@v0
         with:
@@ -916,4 +921,3 @@ jobs:
         with:
           name: freebsd-${{ matrix.release }}-autotools-${{ matrix.EVENT_MATRIX }}-build
           path: build
-
