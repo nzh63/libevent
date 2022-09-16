@@ -212,14 +212,14 @@ evutil_read_file_(const char *filename, char **content_out, size_t *len_out,
 #ifdef _WIN32
 
 static int
-create_tmpfile(WCHAR tmpfile[MAX_PATH])
+create_tmpfile(char tmpfile[MAX_PATH])
 {
-	WCHAR short_path[MAX_PATH] = {0};
-	WCHAR long_path[MAX_PATH] = {0};
-	WCHAR prefix[4] = {0};
-	// GetTempFileNameW() uses up to the first three characters of the prefix
+	char short_path[MAX_PATH] = {0};
+	char long_path[MAX_PATH] = {0};
+	char prefix[4] = {0};
+	// GetTempFileNameA() uses up to the first three characters of the prefix
 	// and windows filesystems are case-insensitive
-	const WCHAR *base32set = L"abcdefghijklmnopqrstuvwxyz012345";
+	const char *base32set = "abcdefghijklmnopqrstuvwxyz012345";
 	ev_uint16_t rnd;
 
 	evutil_secure_rng_get_bytes(&rnd, sizeof(rnd));
@@ -228,9 +228,9 @@ create_tmpfile(WCHAR tmpfile[MAX_PATH])
 	prefix[2] = base32set[(rnd >> 10) & 31];
 	prefix[3] = '\0';
 
-	GetTempPathW(MAX_PATH, short_path);
-	GetLongPathNameW(short_path, long_path, MAX_PATH);
-	if (!GetTempFileNameW(long_path, prefix, 0, tmpfile)) {
+	GetTempPathA(MAX_PATH, short_path);
+	GetLongPathNameA(short_path, long_path, MAX_PATH);
+	if (!GetTempFileNameA(long_path, prefix, 0, tmpfile)) {
 		event_warnx("GetTempFileName failed: %d", EVUTIL_SOCKET_ERROR());
 		return -1;
 	}
@@ -271,8 +271,7 @@ evutil_win_socketpair_afunix(int family, int type, int protocol,
 
 	struct sockaddr_un listen_addr;
 	struct sockaddr_un connect_addr;
-	WCHAR tmp_file[MAX_PATH] = {0};
-	char tmp_file_utf8[MAX_PATH] = {0};
+	char tmp_file[MAX_PATH] = {0};
 
 	ev_socklen_t size;
 	int saved_errno = -1;
@@ -290,11 +289,9 @@ evutil_win_socketpair_afunix(int family, int type, int protocol,
 	if (create_tmpfile(tmp_file)) {
 		goto tidy_up_and_fail;
 	}
-	DeleteFileW(tmp_file);
+	DeleteFileA(tmp_file);
 	listen_addr.sun_family = AF_UNIX;
-	WideCharToMultiByte(
-		CP_UTF8, 0, tmp_file, MAX_PATH, tmp_file_utf8, MAX_PATH, NULL, NULL);
-	if (strlcpy(listen_addr.sun_path, tmp_file_utf8, UNIX_PATH_MAX) >=
+	if (strlcpy(listen_addr.sun_path, tmp_file, UNIX_PATH_MAX) >=
 		UNIX_PATH_MAX) {
 		event_warnx("Temp file name is too long");
 		goto tidy_up_and_fail;
@@ -355,7 +352,7 @@ evutil_win_socketpair_afunix(int family, int type, int protocol,
 	if (acceptor != -1)
 		evutil_closesocket(acceptor);
 	if (tmp_file[0])
-		DeleteFileW(tmp_file);
+		DeleteFileA(tmp_file);
 
 	EVUTIL_SET_SOCKET_ERROR(saved_errno);
 	return -1;
